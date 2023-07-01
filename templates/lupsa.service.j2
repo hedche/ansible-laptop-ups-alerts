@@ -1,0 +1,10 @@
+[Unit]
+Description=Laptop UPS Alert (LUPSA)
+
+[Service]
+ExecStart={{ install_path }}
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

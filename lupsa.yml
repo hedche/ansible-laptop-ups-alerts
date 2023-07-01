@@ -1,0 +1,24 @@
+---
+- name: Create user with sudo access
+  hosts: laptop
+  become: true
+  tasks:
+    - name: Create user
+      user:
+        name: lupsa
+        password: your_password_hash
+        shell: /bin/bash
+        append: yes
+
+    - name: Add user to sudoers
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'lupsa ALL=(ALL) NOPASSWD: {{ install_path }}'
+        validate: 'visudo -cf %s'
+        state: present
+
+    - name: Install script
+      template:
+        src: lupsa.sh.j2
+        dest: {{ install_path }}
+        owner: 
