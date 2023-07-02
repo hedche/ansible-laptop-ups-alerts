@@ -15,10 +15,10 @@ log() {
 check() {
   if [[ $last_state == "AC" ]] || ! grep -q "Laptop is running on:" $log_path && [[ $on_ac == "0" ]] ; then
     log "Laptop is running on: battery power -> Sending an alert to {{ phone_number }}"
-    curl "https://api.callmebot.com/whatsapp.php?phone={{ phone_nummber }}&text=\*LUPSA+Notification\*%0AAC+Power+Disconnected\!&apikey={{ api_key }}"
+    curl "https://api.callmebot.com/whatsapp.php?phone={{ phone_number }}&text=\*LUPSA+Notification\*%0AAC+Power+Disconnected\!&apikey={{ api_key }}"
   elif [[ $last_state == "battery" ]] || ! grep -q "Laptop is running on:" $log_path && [[ $on_ac == "1" ]]; then
     log "Laptop is running on: AC"
-    curl "https://api.callmebot.com/whatsapp.php?phone={{ phone_nummber }}&text=\*LUPSA+Notification\*%0APower+Restored&apikey={{ api_key }}"
+    curl "https://api.callmebot.com/whatsapp.php?phone={{ phone_number }}&text=\*LUPSA+Notification\*%0APower+Restored&apikey={{ api_key }}"
   fi
 }
 
