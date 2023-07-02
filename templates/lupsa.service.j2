@@ -3,8 +3,8 @@ Description=Laptop UPS Alert (LUPSA)
 
 [Service]
 ExecStart={{ install_path }}
-StandardOutput=journal
-StandardError=journal
+StandardOutput=file:{{ log_path }}
+StandardError=file:{{ log_path }}
 
 [Install]
 WantedBy=multi-user.target
