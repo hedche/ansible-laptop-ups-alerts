@@ -1,24 +1,29 @@
 ---
-- name: Create user with sudo access
+- name: Install LUPSA on [laptop] hosts
   hosts: laptop
   become: true
   tasks:
-    - name: Create user
-      user:
-        name: lupsa
-        password: your_password_hash
-        shell: /bin/bash
-        append: yes
+    - name: Ensure {{ log_path }} has right permissions
+      file:
+        path: "{{ log_path }}"
+        state: touch
+        mode: 0664
 
-    - name: Add user to sudoers
-      lineinfile:
-        dest: /etc/sudoers
-        line: 'lupsa ALL=(ALL) NOPASSWD: {{ install_path }}'
-        validate: 'visudo -cf %s'
-        state: present
-
-    - name: Install script
+    - name: Install LUPSA script and unit file
       template:
-        src: lupsa.sh.j2
-        dest: {{ install_path }}
-        owner: 
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      with_items:
+        - { src: lupsa.sh.j2, dest: "{{ install_path }}", mode: '0775'}
+        - { src: lupsa.service.j2, dest: /etc/systemd/system/lupsa.service, mode: '0644'}
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable the LUPSA service
+      systemd:
+        name: lupsa
+        enabled: yes
+        state: restarted
