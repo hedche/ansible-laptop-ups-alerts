@@ -1,4 +1,4 @@
-# Laptop UPS Alert (LUPSA)
+# Laptop UPS Alerts (LUPSA)
 
 This playbook sets up your laptop to monitor if it's on AC power. If it switches to battery power it will send an alert.
 
