@@ -1,0 +1,7 @@
+[laptop]
+
+
+[laptop:vars]
+path=/sys/class/power_supply/AC/online
+install_path=/opt/lupsa.sh
+log_path=/var/log/lupsa.log

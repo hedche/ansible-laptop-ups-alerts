@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# This script monitors if a laptop is connected to AC or not
+
+path={{ path }}
+log_path={{ log_path }}
+
+log() {
+  while [[ $# -gt 0 ]]; do
+    echo "$(date) | $1" >> $log_path
+    shift
+  done
+}
+
+check() {
+  if [[ $last_state == "AC" ]] || ! grep -q "Laptop is running on:" $log_path && [[ $on_ac == "0" ]] ; then
+    log "Laptop is running on: battery power"
+  elif [[ $last_state == "battery" ]] || ! grep -q "Laptop is running on:" $log_path && [[ $on_ac == "1" ]]; then
+    log "Laptop is running on: AC"
+  fi
+}
+
+# Check if the power supply path exists and is readable
+if [ ! -e "$path" ]; then
+  log "ERROR - Path ($path) does not exist !"
+  exit 1
+elif [ ! -r "$path" ] ; then
+  log "ERROR - Permissions issue: Unable to read $path!"
+  exit 1
+fi
+
+# Check if the log path exists and is writable
+if [ ! -e "$log_path" ]; then
+  log "ERROR - Log path ($log_path) does not exist !"
+  exit 1
+elif [ ! -w "$log_path" ] ; then
+  log "ERROR - Permissions issue: Unable to write to $log_path!"
+  exit 1
+fi
+
+
+while true; do
+  on_ac=$(cat $path)
+  last_state=$(tac $log_path | grep -m 1 "Laptop is running on:" | awk '{print $13}')
+  check
+  sleep 1
+done
