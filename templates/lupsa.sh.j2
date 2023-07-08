@@ -11,16 +11,42 @@ log() {
     shift
   done
 }
+{% set phone_number_string = phone_number|string %}
+send_whatsapp() {
+  log "Sending a whatsapp alert to: *******{{ phone_number_string[-4:] }}"
+  if [[ $1 == "AC" ]]; then
+    curl_out=$(curl -s "https://api.callmebot.com/whatsapp.php?phone={{ phone_number }}&text=\*LUPSA+Notification\*%0APower+Restored&apikey={{ api_key }}")
+    check_whatsapp "$curl_out"
+  elif [[ $1 == "battery" ]]; then
+    curl_out=$(curl -s "https://api.callmebot.com/whatsapp.php?phone={{ phone_number }}&text=\*LUPSA+Notification\*%0AAC+Power+Disconnected\!&apikey={{ api_key }}")
+    check_whatsapp "$curl_out"
+  else
+    log "WARNING - Unknown option used for send_whatsapp() function"
+  fi
+}
+
+# This function checks the curl output to ensure the Whatsapp message was sent
+check_whatsapp() {
+  # Obscure phone number
+  filtered=$(sed 's/+\([0-9]\{8\}\)/+********/g' <<< "$1")
+  if [[ $filtered == *"You will receive it in a few seconds"* ]]; then
+    log "ALERT - Successfully sent Whatsapp: $filtered"
+  else
+    log "ERROR - Unexpected output when attempting to send message: $filtered"
+  fi
+}
 
 check() {
   if [[ $last_state == "AC" ]] || ! grep -q "Laptop is running on:" $log_path && [[ $on_ac == "0" ]] ; then
-    log "Laptop is running on: battery power -> Sending an alert to {{ phone_number }}"
-    curl "https://api.callmebot.com/whatsapp.php?phone={{ phone_number }}&text=\*LUPSA+Notification\*%0AAC+Power+Disconnected\!&apikey={{ api_key }}"
+    log "Laptop is running on: battery power"
+    send_whatsapp "battery"
   elif [[ $last_state == "battery" ]] || ! grep -q "Laptop is running on:" $log_path && [[ $on_ac == "1" ]]; then
-    log "Laptop is running on: AC -> Sending confirmation to {{ phone_number }}"
-    curl "https://api.callmebot.com/whatsapp.php?phone={{ phone_number }}&text=\*LUPSA+Notification\*%0APower+Restored&apikey={{ api_key }}"
+    log "Laptop is running on: AC"
+    send_whatsapp "AC"
   fi
 }
+
+log "Starting LUPSA service ..."
 
 # Check if the power supply path exists and is readable
 if [ ! -e "$path" ]; then
@@ -40,10 +66,11 @@ elif [ ! -w "$log_path" ] ; then
   exit 1
 fi
 
+log "Started"
 
 while true; do
   on_ac=$(cat $path)
   last_state=$(tac $log_path | grep -m 1 "Laptop is running on:" | awk '{print $13}')
   check
-  sleep 1
+  sleep 3 # Change this to 1 after testing
 done
